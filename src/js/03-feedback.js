@@ -38,13 +38,13 @@ if (savedData) {
   messageEl.value = message;
 }
 
-const formHandler = e => {
+const formHandler = throttle(e => {
   const { name, value } = e.target;
 
   data = { ...data, [name]: value };
 
   save(KEY, data);
-};
+}, 500);
 
 const submitHandler = e => {
   e.preventDefault();
