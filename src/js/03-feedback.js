@@ -4,44 +4,66 @@ const formEl = document.querySelector('.feedback-form');
 const emailEl = formEl.elements.email;
 const messageEl = formEl.elements.message;
 
-const storageKey = 'feedback-form-state';
-const defaultValues = { email: '', message: '' };
+const KEY = 'feedback-form-state';
+let data = {};
 
-const getValues = key => localStorage.getItem(key);
-
-const setValues = (key, data) =>
-  localStorage.setItem(key, JSON.stringify(data));
-
-const getObj = data => {
+const load = key => {
   try {
-    return JSON.parse(data);
-  } catch ({ message }) {
-    console.log(
-      '%c%s',
-      'color: violet; font: 1.2rem/1 Tahoma;',
-      `Error: ${message}`
-    );
+    const serializedState = localStorage.getItem(key);
+
+    return serializedState === null ? undefined : JSON.parse(serializedState);
+  } catch (err) {
+    console.error('Get state error: ', err);
   }
 };
 
-const formData = getValues(storageKey);
+const save = (key, value) => {
+  try {
+    const serializedState = JSON.stringify(value);
+    localStorage.setItem(key, serializedState);
+  } catch (err) {
+    console.error('Set state error: ', err);
+  }
+};
+const deleteData = key => {
+  localStorage.removeItem(key);
+};
 
-if (!formData) {
-  setValues(storageKey, defaultValues);
-}
+const savedData = load(KEY);
 
-if (formData) {
-  const { email, message } = getObj(formData);
-
+if (savedData) {
+  data = { ...savedData };
+  const { email = '', message = '' } = data;
   emailEl.value = email;
   messageEl.value = message;
 }
 
-const formHandler = throttle(({ target: { name, value } }) => {
-  const json = getValues(storageKey);
-  const data = getObj(json);
+const formHandler = e => {
+  const { name, value } = e.target;
 
-  setValues(storageKey, { ...data, [name]: value });
-}, 100);
+  data = { ...data, [name]: value };
+
+  save(KEY, data);
+};
+
+const submitHandler = e => {
+  e.preventDefault();
+
+  formEl.reset();
+
+  let massage;
+  const test = load(KEY);
+
+  if (!test) {
+    return;
+  }
+
+  massage = test;
+
+  console.log(massage);
+
+  deleteData(KEY);
+};
 
 formEl.addEventListener('input', formHandler);
+formEl.addEventListener('submit', submitHandler);
